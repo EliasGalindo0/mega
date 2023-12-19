@@ -5,8 +5,7 @@ import Loading from "./loading";
 
 export default function Home() {
   const [parameter, setParameter] = useState<number>(6);
-  const [results, setResults] = useState<number[]>([]);
-
+  const [games, setGames] = useState<any>([]);
   const [loading, setLoading] = useState(true);
 
   const [lastResult, setLastResult] = useState<any>({});
@@ -17,8 +16,13 @@ export default function Home() {
 
       const result = await fetch(url);
       const lastResult = await result.json();
+      const storedGames = localStorage.getItem("games");
+      if (storedGames) {
+        setGames(JSON.parse(storedGames));
+      }
 
       setLastResult(lastResult);
+
       setLoading(false);
     };
     getLastResult();
@@ -32,7 +36,21 @@ export default function Home() {
         numeros.push(numeroAleatorio);
       }
     }
-    setResults((prevResults: any) => [...prevResults, [...numeros] as any]);
+    // Formatar os números como strings de duas casas
+    const numerosFormatados = numeros.map((numero) =>
+      numero < 10 ? `0${numero}` : `${numero}`
+    );
+    // Adicionar o novo jogo à lista de jogos
+    const newGames = [...games, numerosFormatados];
+    setGames(newGames);
+
+    // Armazenar os jogos no armazenamento local
+    localStorage.setItem("games", JSON.stringify(newGames));
+  };
+
+  const cleanStorage = () => {
+    localStorage.removeItem("games");
+    window.location.reload();
   };
 
   return (
@@ -99,17 +117,23 @@ export default function Home() {
             </button>
           </div>
           <p className='font-bold text-center mb-2'>Jogos</p>
-          {results.length > 0
-            ? results.map((result: any, index: number) => (
+          {games.length > 0
+            ? games.map((game: any, index: number) => (
                 <p
                   key={index}
                   className='flex items-center justify-center mb-2'>
                   <span className='px-3 py-1 bg-green-600 rounded-full font-bold text-white'>
-                    {result.sort((a: number, b: number) => a - b).join(", ")}
+                    {game.sort((a: number, b: number) => a - b).join(", ")}
                   </span>
+                  {/* <span>{`Vc acertou ${}`}</span> */}
                 </p>
               ))
             : null}
+          <button
+            className='w-1/2 bg-green-700 hover:bg-green-900 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline'
+            onClick={cleanStorage}>
+            Limpar
+          </button>
         </div>
       )}
     </>
